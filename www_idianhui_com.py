@@ -40,34 +40,36 @@ class Article_Spider:
         pageitem = self.Get_Article_Page()
         a = []
         for item in pageitem:
+            article = {}
+            
             pagetime = item[0].encode('utf-8')
+            article['apublishtime'] = pagetime
+            
             pagetitle = item[2]
             pageurl = item[1]
             
+            
             # print pagetime
             url = 'http://www.idianhui.com/article/'+ pageurl
+            article['url'] = url
+            
             req = urllib2.Request(url)
             response = urllib2.urlopen(req)
             mypage = response.read()
-            unicodepage = mypage.decode("utf-8")
-            
+            # unicodepage = mypage.decode("utf-8")
             soup = BeautifulSoup(mypage)
         
             title = soup.find('div',class_='content_h3').get_text()#文章标题
+            article['btitle'] = title
             
             detaildiv = soup.find('div', class_='content_ro2')#文章内容
-            detail = detaildiv.find('table').get_text().replace("\n","").replace("\r","").replace("\t","").replace(" ","")
-            
-            article = {}
-            article['btitle'] = title
+            detail = detaildiv.find('table').get_text().replace("\n","").replace("\r","").replace("\t","").replace(" ","") 
             article['detail'] = detail
-            article['url'] = url 
-            article['apublishtime'] = pagetime
-            
+
             #print "begin:"调试用，其它同            
             a.append(article)
                 
-        #把article中的内容以json格式写入文件
+        #把article中的内容写入文件
         filename = 'article.txt'
         with codecs.open(filename, 'w+', 'utf-8') as f:
             f.write(json.dumps(a,indent=4,sort_keys=True,ensure_ascii=False))
@@ -114,40 +116,49 @@ class Invest_Spider:
         
         b = []
         for item in pageitem:
+            invest = {}
             #print "begin item"调试用，其它同
             url = 'http://www.idianhui.com'+ item
-            req = urllib2.Request(url)            
-            response = urllib2.urlopen(req)
-            mypage = response.read()
-            unicodepage = mypage.decode("utf-8")
+            invest['url'] = url
+            
+            # req = urllib2.Request(url)            
+            # response = urllib2.urlopen(req)
+            # mypage = response.read()
+            # unicodepage = mypage.decode("utf-8")
 
             #print "begin:"
             req = urllib2.Request(url)
-            
             response = urllib2.urlopen(req)
             mypage = response.read()
             unicodepage = mypage.decode("utf-8")
             soup = BeautifulSoup(mypage)
 
-            invest = {}
             title = soup.find('h1').get_text()#标名称
+            invest['atitle'] =title
             
             tenderId = soup.find('span', class_='float_left pl10').get_text()#标编号
+            invest['btenderId'] = tenderId
             
             capitalli = soup.find('li', class_='account')
             capital = capitalli.find('p').get_text()#标金额
+            invest['capital'] = capital
             
             profitli = soup.find('li', class_='apr')
             profit = profitli.find('p').get_text()#年利率
+            invest['dprofit'] = profit
             
             timeli = soup.find('li', class_='time')
             time = timeli.find('p').get_text()#借款期限
+            invest['htime'] =time
             
             repaymodeul = soup.find('ul', class_='clearfix')
             repaymodeli = repaymodeul.get_text()
             
             repaymode = re.search(u"还款方式.*",repaymodeli).group()#还款方式
+            invest['irepaymode'] = repaymode
+            
             statenow = re.search(u"当前状态.*",repaymodeli).group().replace("\n","").replace("\r","").replace("\t","").replace(" ","")#当前状态
+            invest['kstatenow'] = statenow
             
             starttime = re.search(u"开始时间.*",repaymodeli)#开始时间
             if starttime:
@@ -167,24 +178,15 @@ class Invest_Spider:
             detaildiv = soup.find('div', class_='tab-content')#产品详情
             productdetaildiv = detaildiv.find('div',class_='list-tab-con')
             productdetail = productdetaildiv.find('div').get_text().replace("\n","").replace("\r","").replace("\t","").replace(" ","")
+            invest['lproductdetail'] = productdetail
             
             riskcontroldiv  = soup.find('div',class_='list-tab-con',style='display:none;')#风险控制
             riskcontrol  = riskcontroldiv.find('p').get_text().replace("\n","").replace("\r","").replace("\t","").replace(" ","")
-            
-            invest['atitle'] =title
-            invest['btenderId'] = tenderId
-            invest['capital'] = capital
-            invest['dprofit'] = profit
-            invest['htime'] =time
-            invest['irepaymode'] = repaymode
-            invest['kstatenow'] = statenow
-            invest['lproductdetail'] = productdetail
             invest['jriskcontrol'] = riskcontrol
-            invest['url'] = url
             
             b.append(invest)
         
-        #把文章以json格式写入文件
+        #把文章写入文件
         filename ='invest.txt'
         with codecs.open(filename, 'w+', 'utf-8') as f:
             f.write(json.dumps(b,indent=4,sort_keys=True,ensure_ascii=False))
